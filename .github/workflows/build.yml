@@ -55,8 +55,8 @@ jobs:
         pushd .
         	Enter-VsDevShell -VsInstallPath ${vsInstallationPath} -Arch amd64
         popd
-        cmake --preset x64-windows-llvm
-        cmake --build --preset x64-windows-llvm-release
+        cmake --preset x64-windows-clang
+        cmake --build --preset x64-windows-clang-release
         ./build/Release/HelloClang.exe
 
     - name: Archive VCPKG Log Files
