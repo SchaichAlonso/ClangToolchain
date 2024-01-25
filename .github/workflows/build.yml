@@ -48,7 +48,6 @@ jobs:
         & "${env:ProgramFiles(x86)}/Microsoft Visual Studio/Installer/vswhere.exe" -requires "Microsoft.VisualStudio.Component.Windows11SDK.*"
       
     - name: CMake Workflow (VsDevShell)
-      if: ${{ matrix.os == 'windows-2022' }}
       shell: pwsh
       run: |
         $vsInstallationPath=(& "${env:ProgramFiles(x86)}/Microsoft Visual Studio/Installer/vswhere.exe" -requires "Microsoft.VisualStudio.Component.Windows11SDK.*" -property "installationPath")
