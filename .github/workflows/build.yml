@@ -1,0 +1,71 @@
+name: Build and Run
+
+on:
+#  push:
+#    branches: [ "main" ]
+  workflow_dispatch:
+
+env:
+  VCPKG_BINARY_SOURCES: clear;nuget,GitHub,readwrite;nugettimeout,3600
+
+jobs:
+  build:
+    permissions:
+      contents: read
+      packages: write
+  
+    runs-on: windows-2022     
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+      with:
+        submodules: 'recursive'
+
+    - name: Bootstrap VCPKG
+      shell: bash
+      run: ./vcpkg/bootstrap-vcpkg.sh
+
+    - name: Setup NuGet
+      shell: bash
+      run: |
+        ${{matrix.mono}} $((./vcpkg/vcpkg fetch nuget) | tail -n 1) sources add \
+            -source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" \
+            -storepasswordincleartext \
+            -name "GitHub" \
+            -username "${{ github.repository_owner }}" \
+            -password "${{ secrets.GITHUB_TOKEN }}"
+        ${{matrix.mono}} $((./vcpkg/vcpkg fetch nuget) | tail -n 1) setapikey "${{ secrets.GITHUB_TOKEN }}" \
+            -source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
+        ${{matrix.mono}} $((./vcpkg/vcpkg fetch nuget) | tail -n 1) sources
+      
+    - name: Print VsDevShells
+      if: ${{ matrix.os == 'windows-2022' }}
+      shell: pwsh
+      run: |
+        & "${env:ProgramFiles(x86)}/Microsoft Visual Studio/Installer/vswhere.exe" -requires "Microsoft.VisualStudio.Component.Windows11SDK.*"
+      
+    - name: CMake Workflow (VsDevShell)
+      if: ${{ matrix.os == 'windows-2022' }}
+      shell: pwsh
+      run: |
+        $vsInstallationPath=(& "${env:ProgramFiles(x86)}/Microsoft Visual Studio/Installer/vswhere.exe" -requires "Microsoft.VisualStudio.Component.Windows11SDK.*" -property "installationPath")
+        Import-Module "${vsInstallationPath}/Common7/Tools/Microsoft.VisualStudio.DevShell.dll"
+        # invoking vcvarsall leaves the shell in another directory...
+        pushd .
+        	Enter-VsDevShell -VsInstallPath ${vsInstallationPath} -Arch ${{ matrix.VsDevShellArch }}
+        popd
+        cmake --preset x64-windows-llvm
+        cmake --build --preset x64-windows-llvm-release
+        ./build/Release/HelloClang.exe
+
+    - name: Archive VCPKG Log Files
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: buildlogs
+        path: |
+          vcpkg/buildtrees/*/*.txt
+          vcpkg/buildtrees/*/*.log
+
+    
