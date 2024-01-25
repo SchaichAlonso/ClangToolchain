@@ -1,0 +1,6 @@
+[submodule "vcpkg"]
+	path = vcpkg
+	url = git@github.com:PurpleFlowerGarden/vcpkg.git
+[submodule "my-llvm-triplets"]
+	path = my-vcpkg-triplets
+	url = git@github.com:Neumann-A/my-vcpkg-triplets.git
