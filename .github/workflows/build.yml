@@ -42,7 +42,6 @@ jobs:
         ${{matrix.mono}} $((./vcpkg/vcpkg fetch nuget) | tail -n 1) sources
       
     - name: Print VsDevShells
-      if: ${{ matrix.os == 'windows-2022' }}
       shell: pwsh
       run: |
         & "${env:ProgramFiles(x86)}/Microsoft Visual Studio/Installer/vswhere.exe" -requires "Microsoft.VisualStudio.Component.Windows11SDK.*"
@@ -54,7 +53,7 @@ jobs:
         Import-Module "${vsInstallationPath}/Common7/Tools/Microsoft.VisualStudio.DevShell.dll"
         # invoking vcvarsall leaves the shell in another directory...
         pushd .
-        	Enter-VsDevShell -VsInstallPath ${vsInstallationPath} -Arch ${{ matrix.VsDevShellArch }}
+        	Enter-VsDevShell -VsInstallPath ${vsInstallationPath} -Arch amd64
         popd
         cmake --preset x64-windows-llvm
         cmake --build --preset x64-windows-llvm-release
